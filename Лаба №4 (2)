@@ -1,0 +1,331 @@
+# Импортируем необходимые модули
+import tkinter as tk  # Основной модуль для создания графического интерфейса
+from tkinter import ttk, messagebox  # ttk - для стилизованных виджетов, messagebox - для диалоговых окон
+import math  # Для математических операций (корни, факториал и т.д.)
+
+# Функция расчета индекса массы тела (ИМТ)
+def calculate_bmi(weight, height):
+    """
+    Рассчитывает ИМТ по формуле: вес (кг) / рост (м)^2
+    """
+    return weight / (height ** 2)
+
+# Функция решения квадратного уравнения
+def solve_quadratic(a, b, c):
+    """
+    Решает квадратное уравнение ax^2 + bx + c = 0
+    Возвращает строку с результатом
+    """
+    discriminant = b**2 - 4*a*c  # Вычисляем дискриминант
+    if discriminant < 0:  # Если дискриминант отрицательный
+        return "Нет действительных корней"
+    elif discriminant == 0:  # Если дискриминант равен нулю
+        x = -b / (2*a)  # Один корень
+        return f"Один корень: x = {x}"
+    else:  # Если дискриминант положительный
+        x1 = (-b + math.sqrt(discriminant)) / (2*a)  # Первый корень
+        x2 = (-b - math.sqrt(discriminant)) / (2*a)  # Второй корень
+        return f"Два корня: x1 = {x1}, x2 = {x2}"
+
+# Основной класс приложения
+class CalculatorApp:
+    def __init__(self, root):
+        """
+        Конструктор класса. Инициализирует главное окно и все виджеты
+        """
+        self.root = root  # Сохраняем ссылку на главное окно
+        self.root.title("Многофункциональный калькулятор")  # Устанавливаем заголовок окна
+        self.root.geometry("500x700")  # Устанавливаем размер окна (ширина x высота)
+        self.root.resizable(True, True)  # Разрешаем изменение размера окна
+        
+        # Создаем основную рамку с отступами
+        self.main_frame = ttk.Frame(root, padding="10")  # Создаем фрейм с отступом 10px
+        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))  # Размещаем фрейм с растяжением
+        
+        # Создаем заголовок
+        title_label = ttk.Label(self.main_frame, text="Многофункциональный калькулятор", 
+                                font=('Arial', 16, 'bold'))  # Жирный шрифт 16px
+        title_label.grid(row=0, column=0, columnspan=2, pady=10)  # Размещаем заголовок, объединяя 2 колонки
+        
+        # Создаем выпадающий список для выбора операции
+        ttk.Label(self.main_frame, text="Выберите операцию:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.operation_var = tk.StringVar()  # Переменная для хранения выбранной операции
+        # Список доступных операций
+        operations = [
+            "Сложение (+)",
+            "Вычитание (-)",
+            "Умножение (*)",
+            "Деление (/)",
+            "Целочисленное деление (//)",
+            "Остаток от деления (%)",
+            "Возведение в степень (**)",
+            "Квадратный корень (√)",
+            "Кубический корень (∛)",
+            "Факториал числа (n!)",
+            "Индекс массы тела (ИМТ)",
+            "Квадратное уравнение",
+            "Проценты (X% от Y)",
+            "Перевод температур"
+        ]
+        # Создаем выпадающий список
+        self.operation_combo = ttk.Combobox(self.main_frame, textvariable=self.operation_var, 
+                                           values=operations, state="readonly", width=30)
+        self.operation_combo.grid(row=1, column=1, pady=5, sticky=tk.W)  # Размещаем список
+        self.operation_combo.bind('<<ComboboxSelected>>', self.on_operation_change)  # Привязываем событие выбора
+        
+        # Создаем рамку для ввода данных (будет динамически меняться)
+        self.input_frame = ttk.LabelFrame(self.main_frame, text="Ввод данных", padding="10")
+        self.input_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+        
+        # Создаем рамку для вывода результата
+        self.result_frame = ttk.LabelFrame(self.main_frame, text="Результат", padding="10")
+        self.result_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=10)
+        
+        # Метка для отображения результата
+        self.result_label = ttk.Label(self.result_frame, text="", font=('Arial', 12), wraplength=450)
+        self.result_label.grid(row=0, column=0, sticky=tk.W)
+        
+        # Кнопка вычисления
+        self.calc_button = ttk.Button(self.main_frame, text="Вычислить", command=self.calculate, width=20)
+        self.calc_button.grid(row=4, column=0, columnspan=2, pady=10)
+        
+        # Кнопка выхода (используем destroy вместо quit)
+        self.exit_button = ttk.Button(self.main_frame, text="Выход", command=self.exit_app, width=20)
+        self.exit_button.grid(row=5, column=0, columnspan=2, pady=5)
+        
+        # Словарь для хранения полей ввода (динамических)
+        self.input_entries = {}
+        
+        # Инициализируем интерфейс с операцией по умолчанию
+        self.on_operation_change()
+    
+    def exit_app(self):
+        """
+        Функция для корректного закрытия приложения
+        """
+        self.root.destroy()  # Полностью закрывает окно и завершает приложение
+    
+    def on_operation_change(self, event=None):
+        """
+        Обработчик изменения выбранной операции.
+        Обновляет поля ввода в зависимости от выбранной операции
+        """
+        # Очищаем старые поля ввода
+        for widget in self.input_frame.winfo_children():
+            widget.destroy()  # Удаляем все виджеты из рамки ввода
+        self.input_entries.clear()  # Очищаем словарь
+        
+        # Получаем выбранную операцию
+        operation = self.operation_var.get()
+        
+        # В зависимости от выбранной операции создаем соответствующие поля ввода
+        if operation in ["Сложение (+)", "Вычитание (-)", "Умножение (*)", "Деление (/)",
+                        "Целочисленное деление (//)", "Остаток от деления (%)", "Возведение в степень (**)"]:
+            # Для операций с двумя числами
+            self.create_input_field("Число 1:", 0)
+            self.create_input_field("Число 2:", 1)
+            
+        elif operation in ["Квадратный корень (√)", "Кубический корень (∛)", "Факториал числа (n!)"]:
+            # Для операций с одним числом
+            self.create_input_field("Число:", 0)
+            
+        elif operation == "Индекс массы тела (ИМТ)":
+            # Для ИМТ нужны вес и рост
+            self.create_input_field("Вес (кг):", 0)
+            self.create_input_field("Рост (м):", 1)
+            
+        elif operation == "Квадратное уравнение":
+            # Для квадратного уравнения нужны три коэффициента
+            self.create_input_field("Коэффициент a:", 0)
+            self.create_input_field("Коэффициент b:", 1)
+            self.create_input_field("Коэффициент c:", 2)
+            
+        elif operation == "Проценты (X% от Y)":
+            # Для процентов нужны процент и число
+            self.create_input_field("Процент (%):", 0)
+            self.create_input_field("Число:", 1)
+            
+        elif operation == "Перевод температур":
+            # Для перевода температур нужно направление и значение
+            # Создаем выпадающий список для выбора направления перевода
+            ttk.Label(self.input_frame, text="Направление:").grid(row=0, column=0, sticky=tk.W, pady=5)
+            self.direction_var = tk.StringVar()  # Переменная для хранения направления
+            directions = [
+                "Цельсий -> Фаренгейт",
+                "Фаренгейт -> Цельсий",
+                "Цельсий -> Кельвин",
+                "Кельвин -> Цельсий"
+            ]
+            direction_combo = ttk.Combobox(self.input_frame, textvariable=self.direction_var,
+                                          values=directions, state="readonly", width=30)
+            direction_combo.grid(row=0, column=1, pady=5, sticky=tk.W)
+            direction_combo.current(0)  # Выбираем первый пункт по умолчанию
+            self.input_entries['direction'] = direction_combo  # Сохраняем в словарь
+            
+            # Создаем поле для ввода температуры
+            self.create_input_field("Температура:", 1)
+    
+    def create_input_field(self, label_text, row):
+        """
+        Создает поле ввода с меткой
+        label_text: текст метки
+        row: номер строки для размещения
+        """
+        ttk.Label(self.input_frame, text=label_text).grid(row=row, column=0, sticky=tk.W, pady=5)
+        entry = ttk.Entry(self.input_frame, width=30)  # Создаем поле ввода
+        entry.grid(row=row, column=1, pady=5, sticky=tk.W)  # Размещаем поле
+        self.input_entries[label_text] = entry  # Сохраняем поле в словаре
+    
+    def get_input_values(self):
+        """
+        Получает значения из всех полей ввода
+        Возвращает список значений или вызывает исключение при ошибке
+        """
+        values = []
+        for label, entry in self.input_entries.items():
+            if label != 'direction':  # Пропускаем направление (это не числовое поле)
+                text = entry.get().strip()  # Получаем текст и удаляем пробелы
+                if not text:  # Если поле пустое
+                    raise ValueError(f"Поле '{label}' не заполнено")
+                # Пытаемся преобразовать в число
+                try:
+                    values.append(float(text))
+                except ValueError:
+                    # Если не число, проверяем, может это целое для факториала
+                    if label == "Число:" and self.operation_var.get() == "Факториал числа (n!)":
+                        values.append(int(float(text)))  # Преобразуем в целое
+                    else:
+                        raise ValueError(f"'{text}' не является числом")
+        return values
+    
+    def calculate(self):
+        """
+        Основная функция вычисления. Вызывается при нажатии кнопки "Вычислить"
+        """
+        try:
+            operation = self.operation_var.get()  # Получаем выбранную операцию
+            if not operation:  # Если операция не выбрана
+                messagebox.showwarning("Предупреждение", "Пожалуйста, выберите операцию")
+                return
+            
+            # Получаем значения из полей ввода
+            values = self.get_input_values()
+            result = ""  # Переменная для хранения результата
+            
+            # Выполняем соответствующую операцию
+            if operation == "Сложение (+)":
+                result = f"{values[0]} + {values[1]} = {values[0] + values[1]}"
+                
+            elif operation == "Вычитание (-)":
+                result = f"{values[0]} - {values[1]} = {values[0] - values[1]}"
+                
+            elif operation == "Умножение (*)":
+                result = f"{values[0]} * {values[1]} = {values[0] * values[1]}"
+                
+            elif operation == "Деление (/)":
+                if values[1] == 0:
+                    messagebox.showerror("Ошибка", "Деление на ноль невозможно!")
+                    return
+                result = f"{values[0]} / {values[1]} = {values[0] / values[1]}"
+                
+            elif operation == "Целочисленное деление (//)":
+                if values[1] == 0:
+                    messagebox.showerror("Ошибка", "Деление на ноль невозможно!")
+                    return
+                result = f"{values[0]} // {values[1]} = {values[0] // values[1]}"
+                
+            elif operation == "Остаток от деления (%)":
+                if values[1] == 0:
+                    messagebox.showerror("Ошибка", "Деление на ноль невозможно!")
+                    return
+                result = f"{values[0]} % {values[1]} = {values[0] % values[1]}"
+                
+            elif operation == "Возведение в степень (**)":
+                result = f"{values[0]} ** {values[1]} = {values[0] ** values[1]}"
+                
+            elif operation == "Квадратный корень (√)":
+                if values[0] < 0:
+                    messagebox.showerror("Ошибка", "Нельзя извлечь квадратный корень из отрицательного числа")
+                    return
+                result = f"√{values[0]} = {math.sqrt(values[0])}"
+                
+            elif operation == "Кубический корень (∛)":
+                if values[0] >= 0:
+                    result_val = values[0] ** (1/3)
+                else:
+                    result_val = -(-values[0]) ** (1/3)
+                result = f"∛{values[0]} = {result_val}"
+                
+            elif operation == "Факториал числа (n!)":
+                num = int(values[0])
+                if num < 0:
+                    messagebox.showerror("Ошибка", "Факториал отрицательного числа не определен")
+                    return
+                result = f"{num}! = {math.factorial(num)}"
+                
+            elif operation == "Индекс массы тела (ИМТ)":
+                weight, height = values
+                if height <= 0:
+                    messagebox.showerror("Ошибка", "Рост должен быть положительным числом")
+                    return
+                bmi = calculate_bmi(weight, height)
+                # Определяем интерпретацию
+                if bmi < 18.5:
+                    interpretation = "Дефицит массы тела"
+                elif 18.5 <= bmi < 25:
+                    interpretation = "Норма"
+                elif 25 <= bmi < 30:
+                    interpretation = "Избыточная масса тела (предожирение)"
+                else:
+                    interpretation = "Ожирение"
+                result = f"ИМТ = {bmi:.2f}\nИнтерпретация: {interpretation}"
+                
+            elif operation == "Квадратное уравнение":
+                a, b, c = values
+                if a == 0:
+                    messagebox.showerror("Ошибка", "Коэффициент a не может быть равен 0")
+                    return
+                result = solve_quadratic(a, b, c)
+                
+            elif operation == "Проценты (X% от Y)":
+                percent, number = values
+                result_val = (percent / 100) * number
+                result = f"{percent}% от {number} = {result_val}"
+                
+            elif operation == "Перевод температур":
+                # Получаем направление перевода
+                direction = self.input_entries['direction'].get()
+                temp = values[0]  # Значение температуры
+                
+                if direction == "Цельсий -> Фаренгейт":
+                    converted = (temp * 9/5) + 32
+                    result = f"{temp}°C = {converted}°F"
+                elif direction == "Фаренгейт -> Цельсий":
+                    converted = (temp - 32) * 5/9
+                    result = f"{temp}°F = {converted}°C"
+                elif direction == "Цельсий -> Кельвин":
+                    converted = temp + 273.15
+                    result = f"{temp}°C = {converted}K"
+                elif direction == "Кельвин -> Цельсий":
+                    if temp < 0:
+                        messagebox.showerror("Ошибка", "Температура в Кельвинах не может быть отрицательной")
+                        return
+                    converted = temp - 273.15
+                    result = f"{temp}K = {converted}°C"
+            
+            # Отображаем результат
+            self.result_label.config(text=result)
+            
+        except ValueError as e:
+            # Обрабатываем ошибки преобразования чисел
+            messagebox.showerror("Ошибка ввода", str(e))
+        except Exception as e:
+            # Обрабатываем все остальные ошибки
+            messagebox.showerror("Ошибка", f"Произошла ошибка: {str(e)}")
+
+# Точка входа в программу
+if __name__ == "__main__":
+    root = tk.Tk()  # Создаем главное окно
+    app = CalculatorApp(root)  # Создаем экземпляр приложения
+    root.mainloop()  # Запускаем главный цикл обработки событий
+
