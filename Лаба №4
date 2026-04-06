@@ -1,0 +1,29 @@
+┌─────────────────────────────────────────────────────────────┐
+│                             CalculatorApp                   │
+|────────────────────────────────────────────────────────────-|
+│ - root: tk.Tk                                               │
+│ - main_frame: ttk.Frame                                     │
+│ - operation_var: tk.StringVar                               │
+│ - operation_combo: ttk.Combobox                             │
+│ - input_frame: ttk.LabelFrame                               │
+│ - result_frame: ttk.LabelFrame                              │
+│ - result_label: ttk.Label                                   |
+│ - calc_button: ttk.Button                                   │
+│ - exit_button: ttk.Button                                   │
+│ - input_entries: dict                                       │
+|────────────────────────────────────────────────────────────-|
+│ + __init__(root: tk.Tk)                                     │
+│ + exit_app()                                                │
+│ + on_operation_change()                                     │
+│ + create_input_field()                                      |
+│ + get_input_values() -> list                                |
+│ + calculate()                                               │
+└──────────────────────────────────────────────────────────---┘
+                              |                            
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Внешние функции                           │
+|────────────────────────────────────────────────────────────-|
+│ + calculate_bmi(weight, height) -> float                    │
+│ + solve_quadratic(a, b, c) -> str                           │
+└─────────────────────────────────────────────────────────────┘
