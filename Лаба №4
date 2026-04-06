@@ -8,7 +8,7 @@
 │ - input_frame: ttk.LabelFrame                               │
 │ - result_frame: ttk.LabelFrame                              │
 │ - result_label: ttk.Label                                   |
-│ - calc_button: ttk.Button                                   │
+│ - calc_button: ttk.Button                                   |
 │ - exit_button: ttk.Button                                   │
 │ - input_entries: dict                                       │
 |────────────────────────────────────────────────────────────-|
