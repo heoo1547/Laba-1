@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Калькулятор | Мобильное приложение</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none; /* предотвращает случайное выделение текста на кнопках */
+      -webkit-tap-highlight-color: transparent; /* убирает серый фон при тапе на iOS */
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+      background: #1c1c1e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 16px;
+    }
+
+    /* Основной контейнер — имитация мобильного экрана */
+    .calculator-app {
+      max-width: 400px;
+      width: 100%;
+      background-color: #000000;
+      border-radius: 48px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+      padding: 20px 16px 32px 16px;
+      transition: all 0.2s ease;
+    }
+
+    /* Дисплей калькулятора */
+    .display {
+      background-color: #000000;
+      padding: 20px 16px 30px 16px;
+      text-align: right;
+      border-bottom: 1px solid #2c2c2e;
+    }
+
+    .expression {
+      font-size: 2rem;
+      color: #8e8e93;
+      min-height: 3rem;
+      word-wrap: break-word;
+      word-break: break-all;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+
+    .result {
+      font-size: 4rem;
+      font-weight: 500;
+      color: #ffffff;
+      margin-top: 8px;
+      word-wrap: break-word;
+      word-break: break-word;
+      line-height: 1.2;
+      min-height: 5.5rem;
+      font-weight: 500;
+    }
+
+    /* Сетка кнопок — классическая раскладка */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+      padding: 4px;
+    }
+
+    /* Базовый стиль кнопок */
+    .btn {
+      aspect-ratio: 1 / 1;
+      border: none;
+      border-radius: 60px;
+      font-size: 2rem;
+      font-weight: 500;
+      background-color: #2c2c2e;
+      color: white;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+      touch-action: manipulation;
+    }
+
+    /* Отзыв при нажатии — тактильный фидбек */
+    .btn:active {
+      transform: scale(0.96);
+      opacity: 0.8;
+    }
+
+    /* Специфичные классы для разных типов кнопок */
+    .btn-function {
+      background-color: #5e5e62;
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .btn-operator {
+      background-color: #ff9f0a;
+      color: white;
+      font-size: 2.2rem;
+      font-weight: 600;
+    }
+
+    .btn-equals {
+      background-color: #ff9f0a;
+      color: white;
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    /* Для кнопки 0 — делаем её шире (занимает две колонки) */
+    .btn-zero {
+      grid-column: span 2;
+      aspect-ratio: 2 / 1;
+    }
+
+    /* Кнопка очистки (AC/C) */
+    .btn-clear {
+      background-color: #5e5e62;
+      color: #ffffff;
+    }
+
+    /* маленький экран: чуть меньше отступы и шрифт */
+    @media (max-width: 420px) {
+      .calculator-app {
+        padding: 12px 12px 24px 12px;
+      }
+      .buttons {
+        gap: 10px;
+      }
+      .btn {
+        font-size: 1.8rem;
+      }
+      .result {
+        font-size: 3.2rem;
+      }
+      .expression {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Для очень узких экранов, но не ломаем сетку */
+    @media (max-width: 340px) {
+      .btn {
+        font-size: 1.5rem;
+      }
+      .buttons {
+        gap: 8px;
+      }
+    }
+
+    /* Убираем outline для кликов, но оставляем для accessibility */
+    .btn:focus-visible {
+      outline: 2px solid #ff9f0a;
+      outline-offset: 2px;
+    }
+
+    /* Эмуляция родного приложения */
+    footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #636366;
+      font-weight: 400;
+    }
+  </style>
+
+</head>
+<body>
+<div class="calculator-app">
+  <div class="display">
+    <div class="expression" id="expression">0</div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="buttons" id="buttons-container">
+    <!-- Кнопки будут вставлены динамически через JS, но можно и статически -->
+  </div>
+  <footer style="font-size: 10px; text-align: center; color: #636366; margin-top: 12px;">=  мобильный калькулятор</footer>
+</div>
+
+<script>
+  // ========================
+  // Мобильный Калькулятор — Логика с полным контролем
+  // Поддерживает: базовые операции +-*/, проценты, смену знака, очистку.
+  // Корректная обработка десятичных чисел, предотвращение лишних операторов,
+  // вычисление только при нажатии "=" или при последовательном вводе.
+  // Также поддерживает непрерывные вычисления.
+  // ========================
+
+  // DOM элементы
+  const expressionEl = document.getElementById('expression');
+  const resultEl = document.getElementById('result');
+
+  // Состояние калькулятора
+  let currentInput = '0';      // то, что сейчас набирает пользователь или результат
+  let previousInput = null;    // предыдущее значение (для операций)
+  let currentOperator = null;   // текущий выбранный оператор (+, -, ×, ÷)
+  let waitingForOperand = false; // ожидание ввода операнда после оператора
+  let expressionString = '0';    // строка для отображения выражения (необязательно)
+  let lastActionWasEqual = false; // чтобы правильно обрабатывать последующие действия после "="
+
+  // Вспомогательные функции
+  function updateDisplay() {
+    // Форматируем текущий ввод для отображения (обрезаем лишние нули, но не трогаем длинные числа)
+    let displayValue = currentInput;
+    if (displayValue === '' || displayValue === undefined) displayValue = '0';
+    // Для дробных чисел убираем завершающую точку, если есть
+    if (displayValue.endsWith('.')) displayValue = displayValue.slice(0, -1);
+    // Ограничим длину, чтобы не ломать интерфейс, но сохраним точность
+    if (displayValue.length > 18) {
+      // попробуем преобразовать в число с плавающей точкой с округлением
+      let num = parseFloat(displayValue);
+      if (!isNaN(num)) {
+        displayValue = num.toPrecision(12).replace(/\.?0+$/, '');
+      } else {
+        displayValue = displayValue.slice(0, 16);
+      }
+    }
+    resultEl.innerText = displayValue;
+
+    // Формируем строку выражения для верхней части (только если есть оператор и предыдущее значение)
+    if (currentOperator && previousInput !== null && !waitingForOperand) {
+      let prevFormatted = previousInput;
+      if (typeof prevFormatted === 'number') {
+        prevFormatted = parseFloat(prevFormatted.toFixed(10)).toString();
+      }
+      let opSymbol = '';
+      if (currentOperator === '+') opSymbol = '+';
+      else if (currentOperator === '-') opSymbol = '-';
+      else if (currentOperator === '*') opSymbol = '×';
+      else if (currentOperator === '/') opSymbol = '÷';
+      expressionEl.innerText = ${prevFormatted} ${opSymbol} ${displayValue};
+    } 
+    else if (previousInput !== null && waitingForOperand && currentOperator) {
+      // состояние после нажатия оператора, но до ввода нового числа
+      let prevFormatted = previousInput;
+      if (typeof prevFormatted === 'number') prevFormatted = parseFloat(prevFormatted.toFixed(10)).toString();
+      let opSymbol = '';
+      if (currentOperator === '+') opSymbol = '+';
+      else if (currentOperator === '-') opSymbol = '-';
+      else if (currentOperator === '*') opSymbol = '×';
+      else if (currentOperator === '/') opSymbol = '÷';
+      expressionEl.innerText = ${prevFormatted} ${opSymbol};
+    }
+    else {
+      // просто показываем текущее значение как выражение
+      expressionEl.innerText = displayValue;
+    }
+    // если результат после "=" не было нового ввода, expression показывает итог и оператор не активен
+    if (lastActionWasEqual && currentOperator === null && previousInput === null) {
+      expressionEl.innerText = displayValue;
+    }
+  }
+
+  // Выполнение арифметической операции между previousInput и currentInput
+  function calculateResult() {
+
+if (currentOperator === null  previousInput === null  waitingForOperand) {
+      // если нет оператора или не готово — ничего не делаем
+      return false;
+    }
+    let a = parseFloat(previousInput);
+    let b = parseFloat(currentInput);
+    if (isNaN(a) || isNaN(b)) return false;
+
+    let computedValue;
+    switch (currentOperator) {
+      case '+':
+        computedValue = a + b;
+        break;
+      case '-':
+        computedValue = a - b;
+        break;
+      case '*':
+        computedValue = a * b;
+        break;
+      case '/':
+        if (b === 0) {
+          // Деление на ноль — показываем ошибку
+          currentInput = 'Ошибка';
+          previousInput = null;
+          currentOperator = null;
+          waitingForOperand = false;
+          lastActionWasEqual = false;
+          updateDisplay();
+          return false;
+        }
+        computedValue = a / b;
+        break;
+      default:
+        return false;
+    }
+    // Округлим небольшую погрешность с плавающей точкой (например 0.1 + 0.2)
+    computedValue = parseFloat(computedValue.toFixed(10));
+    // Преобразуем результат в строку, избегая научного формата для простых чисел
+    let resultStr = computedValue.toString();
+    // Если число целое — убираем .0
+    if (resultStr.includes('.') && resultStr.endsWith('.0')) resultStr = resultStr.slice(0, -2);
+    currentInput = resultStr;
+    previousInput = null;
+    currentOperator = null;
+    waitingForOperand = false;
+    lastActionWasEqual = true;
+    updateDisplay();
+    return true;
+  }
+
+  // Обработчик ввода цифр и десятичной точки
+  function inputDigit(digit) {
+    // Если последнее действие было "=", начинаем новый ввод
+    if (lastActionWasEqual) {
+      clearAll();
+      lastActionWasEqual = false;
+    }
+    // Если ожидание операнда, сбрасываем текущий ввод
+    if (waitingForOperand) {
+      currentInput = digit;
+      waitingForOperand = false;
+      lastActionWasEqual = false;
+    } else {
+      // Предотвращаем множественные ведущие нули
+      if (currentInput === '0' && digit !== '.') {
+        currentInput = digit;
+      } 
+      // Обработка десятичной точки
+      else if (digit === '.') {
+        if (!currentInput.includes('.')) {
+          currentInput += '.';
+        }
+      }
+      else {
+        // Ограничение длины ввода, чтобы не переполнить экран (не более 15 знаков)
+        if (currentInput.replace(/\./g, '').length < 15) {
+          currentInput += digit;
+        }
+      }
+    }
+    // Если после ввода числа убираем флаг equal и обновляем дисплей
+    updateDisplay();
+  }
+
+  // Функция для ввода десятичной точки (отдельно для удобства, но можно и через inputDigit)
+  function inputDecimal() {
+    if (lastActionWasEqual) {
+      clearAll();
+      lastActionWasEqual = false;
+    }
+    if (waitingForOperand) {
+      currentInput = '0.';
+      waitingForOperand = false;
+    } else {
+      if (!currentInput.includes('.')) {
+        currentInput += '.';
+      }
+    }
+    updateDisplay();
+  }
+
+  // Обработка операторов (+, -, ×, ÷)
+  function handleOperator(op) {
+    // Если была ошибка "Ошибка", то сбросим при нажатии оператора
+    if (currentInput === 'Ошибка') {
+      clearAll();
+    }
+
+    // Если последнее действие "=", то используем результат как первый операнд для нового вычисления
+    if (lastActionWasEqual) {
+      previousInput = currentInput;
+      waitingForOperand = true;
+      currentOperator = op;
+      lastActionWasEqual = false;
+      updateDisplay();
+      return;
+    }
+
+    // Если нет активного оператора и previousInput === null, то просто сохраняем текущее значение и оператор
+    if (currentOperator === null || previousInput === null) {
+      if (currentInput !== '' && currentInput !== 'Ошибка') {
+        previousInput = currentInput;
+        currentOperator = op;
+        waitingForOperand = true;
+        updateDisplay();
+      }
+      return;
+    }
+    
+    // Если есть и previousInput и currentOperator и не ожидание операнда, то выполняем предыдущую операцию
+    if (!waitingForOperand && previousInput !== null && currentOperator !== null) {
+
+// Вычисляем промежуточный результат
+      let a = parseFloat(previousInput);
+      let b = parseFloat(currentInput);
+      if (!isNaN(a) && !isNaN(b)) {
+        let tempResult;
+        switch (currentOperator) {
+          case '+': tempResult = a + b; break;
+          case '-': tempResult = a - b; break;
+          case '*': tempResult = a * b; break;
+          case '/': 
+            if (b === 0) {
+              currentInput = 'Ошибка';
+              previousInput = null;
+              currentOperator = null;
+              waitingForOperand = false;
+              updateDisplay();
+              return;
+            }
+            tempResult = a / b; break;
+          default: tempResult = b;
+        }
+        tempResult = parseFloat(tempResult.toFixed(10));
+        previousInput = tempResult.toString();
+        currentInput = previousInput;
+        currentOperator = op;
+        waitingForOperand = true;
+        updateDisplay();
+      } else {
+        // fallback
+        previousInput = currentInput;
+        currentOperator = op;
+        waitingForOperand = true;
+        updateDisplay();
+      }
+    } else {
+      // просто меняем оператор, если ожидание операнда и нет вычислений
+      currentOperator = op;
+      updateDisplay();
+    }
+  }
+
+  // Функция для вычисления процента от текущего числа
+  function percentage() {
+    if (lastActionWasEqual) {
+      clearAll();
+    }
+    let val = parseFloat(currentInput);
+    if (isNaN(val)) return;
+    let percentValue = val / 100;
+    currentInput = percentValue.toString();
+    // Если ожидание операнда после оператора — можно использовать процент как число
+    // По стандарту, процент преобразует текущее число в процент от предыдущего, но упростим до базового
+    // Также если есть предыдущий операнд и оператор, то процент вычисляется относительно предыдущего значения
+    if (previousInput !== null && currentOperator !== null && waitingForOperand === false) {
+      // вариант для полноценной работы: процент от предыдущего значения
+      let base = parseFloat(previousInput);
+      if (!isNaN(base)) {
+        let percentOfBase = base * (val / 100);
+        currentInput = percentOfBase.toString();
+      }
+    }
+    waitingForOperand = false;
+    updateDisplay();
+  }
+
+  // Смена знака (+/-)
+  function toggleSign() {
+    if (currentInput === 'Ошибка') return;
+    let val = parseFloat(currentInput);
+    if (isNaN(val)) return;
+    val = -val;
+    currentInput = val.toString();
+    updateDisplay();
+  }
+
+  // Полная очистка (AC)
+  function clearAll() {
+    currentInput = '0';
+    previousInput = null;
+    currentOperator = null;
+    waitingForOperand = false;
+    lastActionWasEqual = false;
+    updateDisplay();
+  }
+
+  // Очистка текущего ввода (C) — если один раз удалить последний символ, но в мобильных калькуляторах чаще С стирает один символ.
+  // Добавим удобную функцию: если нажать "C" (очистка) очищает последний ввод либо сбрасывает текущее число до 0.
+  // Но для упрощения и единообразия используем функцию clearEntry (стирает текущее число, но не сбрасывает операцию)
+  function clearEntry() {
+    if (currentInput !== '0' && currentInput.length > 1 && currentInput !== 'Ошибка') {
+      currentInput = currentInput.slice(0, -1);
+      if (currentInput === '' || currentInput === '-') currentInput = '0';
+    } else {
+      currentInput = '0';
+    }
+    waitingForOperand = false;
+    lastActionWasEqual = false;
+    updateDisplay();
+  }
+
+  // Обработчик нажатия равно
+  function equals() {
+    if (currentInput === 'Ошибка') {
+      return;
+    }
+    if (currentOperator !== null && previousInput !== null && !waitingForOperand) {
+      calculateResult();
+    } else if (currentOperator !== null && previousInput !== null && waitingForOperand) {
+      // если ожидание операнда, то просто показываем предыдущее значение, но по логике "=" дублирует предыдущее
+      // ничего не делаем, но можно сбросить оператор
+      currentInput = previousInput;
+      previousInput = null;
+      currentOperator = null;
+      waitingForOperand = false;
+      lastActionWasEqual = true;
+      updateDisplay();
+
+} else {
+      // без оператора нечего вычислять, просто отображаем текущий результат
+      lastActionWasEqual = true;
+      updateDisplay();
+    }
+  }
+
+  // ============== Построение интерфейса кнопок ==============
+  function buildButtons() {
+    const buttonsConfig = [
+      // Первая строка
+      { text: 'AC', type: 'clear-all', action: 'clearAll', class: 'btn-clear' },
+      { text: '+/−', type: 'sign', action: 'toggleSign', class: 'btn-function' },
+      { text: '%', type: 'percent', action: 'percentage', class: 'btn-function' },
+      { text: '÷', type: 'operator', action: 'divide', class: 'btn-operator', value: '/' },
+      // Вторая строка
+      { text: '7', type: 'digit', value: '7', class: '' },
+      { text: '8', type: 'digit', value: '8', class: '' },
+      { text: '9', type: 'digit', value: '9', class: '' },
+      { text: '×', type: 'operator', action: 'multiply', class: 'btn-operator', value: '*' },
+      // Третья строка
+      { text: '4', type: 'digit', value: '4', class: '' },
+      { text: '5', type: 'digit', value: '5', class: '' },
+      { text: '6', type: 'digit', value: '6', class: '' },
+      { text: '-', type: 'operator', action: 'subtract', class: 'btn-operator', value: '-' },
+      // Четвертая строка
+      { text: '1', type: 'digit', value: '1', class: '' },
+      { text: '2', type: 'digit', value: '2', class: '' },
+      { text: '3', type: 'digit', value: '3', class: '' },
+      { text: '+', type: 'operator', action: 'add', class: 'btn-operator', value: '+' },
+      // Пятая строка: 0, точка, равно
+      { text: '0', type: 'digit', value: '0', class: 'btn-zero' },
+      { text: ',', type: 'decimal', action: 'decimal', class: '' },
+      { text: '=', type: 'equals', action: 'equals', class: 'btn-equals' },
+    ];
+
+    const container = document.getElementById('buttons-container');
+    container.innerHTML = '';
+    buttonsConfig.forEach(btn => {
+      const button = document.createElement('button');
+      button.innerText = btn.text;
+      let baseClass = 'btn';
+      if (btn.class) baseClass += ' ' + btn.class;
+      if (btn.type === 'operator') baseClass += ' btn-operator';
+      if (btn.type === 'equals') baseClass += ' btn-equals';
+      if (btn.type === 'digit' && btn.text === '0') baseClass += ' btn-zero';
+      if (btn.type === 'decimal') baseClass += ' btn-function';
+      if (btn.type === 'percent') baseClass += ' btn-function';
+      if (btn.type === 'sign') baseClass += ' btn-function';
+      if (btn.type === 'clear-all') baseClass += ' btn-clear';
+      button.className = baseClass;
+
+      // Добавляем обработчики
+      if (btn.type === 'digit') {
+        button.addEventListener('click', () => inputDigit(btn.value));
+      } else if (btn.type === 'decimal') {
+        button.addEventListener('click', () => inputDecimal());
+      } else if (btn.type === 'operator') {
+        button.addEventListener('click', () => handleOperator(btn.value));
+      } else if (btn.type === 'equals') {
+        button.addEventListener('click', () => equals());
+      } else if (btn.type === 'percent') {
+        button.addEventListener('click', () => percentage());
+      } else if (btn.type === 'sign') {
+        button.addEventListener('click', () => toggleSign());
+      } else if (btn.type === 'clear-all') {
+        button.addEventListener('click', () => {
+          // Для AC полный сброс, но если хотим C, то можно использовать clearEntry,
+          // однако по логике современных калькуляторов одна кнопка AC/C: когда есть ввод, то C (очистить ввод)
+          // но для простоты реализуем: если currentInput не "0" и нет ожидания, то clearEntry иначе clearAll
+          if (currentInput !== '0' && currentInput !== 'Ошибка' && waitingForOperand === false && lastActionWasEqual === false) {
+            clearEntry();
+          } else {
+            clearAll();
+          }
+        });
+      }
+      container.appendChild(button);
+    });
+    // Дополнительно добавим обработчик для физической клавиатуры (опционально) — для полноты мобильного интерфейса не обязательно
+  }
+
+  // Инициализация
+  function init() {
+
+buildButtons();
+    updateDisplay();
+  }
+
+  init();
+</script>
+</body>
+</html>
