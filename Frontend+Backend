@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.75, viewport-fit=cover, user-scalable=no">
+    <title>Компактный калькулятор</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Noto Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #1c1c1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 8px;
+        }
+
+        .calculator-app {
+            max-width: 450px;
+            width: 100%;
+            background-color: #000000;
+            border-radius: 36px;
+            box-shadow: 0 15px 30px -8px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            padding: 12px 12px 20px 12px;
+        }
+
+        /* Большое окно дисплея */
+        .display {
+            background-color: #000000;
+            padding: 25px 16px 25px 16px;
+            text-align: right;
+            border-bottom: 1px solid #2c2c2e;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .expression {
+            font-size: 1rem;
+            color: #8e8e93;
+            min-height: 1.8rem;
+            word-wrap: break-word;
+            word-break: break-all;
+            font-weight: 400;
+            font-family: monospace;
+        }
+
+        /* Ячейка результата - ОСОБЫЙ КРУПНЫЙ СТИЛЬ */
+        .result {
+            font-size: 3.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-top: 10px;
+            word-wrap: break-word;
+            word-break: break-word;
+            line-height: 1.2;
+            min-height: 5rem;
+            font-family: monospace;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin: 10px 4px 6px 4px;
+        }
+
+        /* Кнопки переключения режимов - ЕДИНЫЙ СТИЛЬ */
+        .mode-btn {
+            flex: 1;
+            background-color: #2c2c2e;
+            color: white;
+            border: none;
+            border-radius: 28px;
+            padding: 10px 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .mode-btn.active {
+            background-color: #ff9f0a;
+            color: white;
+        }
+
+        .mode-btn:active {
+            transform: scale(0.96);
+            opacity: 0.8;
+        }
+
+        .func-panel {
+            background-color: #0c0c0e;
+            border-radius: 20px;
+            padding: 12px;
+            margin: 8px 4px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .func-panel.active {
+            display: flex;
+        }
+
+        /* Список выбора команд - ЕДИНЫЙ СТИЛЬ */
+        #funcSelect {
+            background-color: #2c2c2e;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            margin-bottom: 4px;
+            width: 100%;
+        }
+
+        #funcSelect:focus {
+            outline: 2px solid #ff9f0a;
+        }
+
+        #funcSelect option {
+            background-color: #2c2c2e;
+            color: white;
+            font-size: 0.9rem;
+            font-family: inherit;
+            padding: 8px;
+        }
+
+        /* Подписи полей ввода - ЕДИНЫЙ СТИЛЬ */
+        .func-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .func-input-group label {
+            color: #8e8e93;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        /* Поля ввода - ЕДИНЫЙ СТИЛЬ */
+        .func-input-group input, .func-input-group select {
+            background-color: #2c2c2e;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .func-input-group input:focus, .func-input-group select:focus {
+            outline: 2px solid #ff9f0a;
+        }
+
+        /* Кнопка "Вычислить" - ЕДИНЫЙ СТИЛЬ */
+        .func-calc-btn {
+            background-color: #ff9f0a;
+            color: white;
+            border: none;
+            border-radius: 28px;
+            padding: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+
+        .func-calc-btn:active {
+            transform: scale(0.97);
+            opacity: 0.8;
+        }
+
+        /* Результат в расширенном калькуляторе - ОСОБЫЙ КРУПНЫЙ СТИЛЬ */
+        .func-result {
+            background-color: #2c2c2e;
+            border-radius: 14px;
+            padding: 18px 10px;
+            margin-top: 6px;
+            color: #ff9f0a;
+            font-weight: 600;
+            text-align: center;
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 2.2rem;
+            min-height: 95px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+            padding: 4px;
+        }
+
+        /* Кнопки калькулятора - ЕДИНЫЙ СТИЛЬ */
+        .btn {
+            aspect-ratio: 1 / 1;
+            border: none;
+            border-radius: 56px;
+            font-size: 1.8rem;
+            font-weight: 500;
+            background-color: #2c2c2e;
+            color: white;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            transform: scale(0.94);
+            opacity: 0.8;
+        }
+
+        .btn-function {
+            background-color: #5e5e62;
+            color: #ffffff;
+        }
+
+        .btn-operator {
+            background-color: #ff9f0a;
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-equals {
+            background-color: #ff9f0a;
+            color: white;
+            font-weight: 600;
+        }
+
+        .btn-clear {
+            background-color: #5e5e62;
+            color: #ffffff;
+        }
+
+        @media (max-width: 450px) {
+            .btn { font-size: 1.5rem; }
+            .result { font-size: 2.6rem; }
+            .func-result { font-size: 1.8rem; padding: 14px 8px; min-height: 85px; }
+            .display { padding: 18px 12px; min-height: 115px; }
+            .calculator-app { padding: 10px 10px 16px 10px; }
+            .buttons { gap: 8px; }
+            .mode-btn { font-size: 0.8rem; padding: 8px 6px; }
+            #funcSelect { padding: 10px 14px; font-size: 0.8rem; }
+            .func-input-group label { font-size: 0.8rem; }
+            .func-input-group input, .func-input-group select { padding: 10px 12px; font-size: 0.8rem; }
+            .func-calc-btn { font-size: 0.8rem; padding: 10px; }
+        }
+
+        @media (max-width: 380px) {
+            .btn { font-size: 1.3rem; }
+            .result { font-size: 2.2rem; }
+            .display { padding: 15px 12px; min-height: 100px; }
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid #ff9f0a;
+            outline-offset: 2px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 9px;
+            color: #636366;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+<div class="calculator-app">
+    <div class="display">
+        <div class="expression" id="expression"></div>
+        <div class="result" id="result">0</div>
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" data-mode="standard">Стандартный</button>
+        <button class="mode-btn" data-mode="advanced">Расширенный</button>
+    </div>
+
+    <div class="func-panel" id="funcPanel">
+        <select id="funcSelect">
+            <option value="bmi">Индекс массы тела (ИМТ)</option>
+            <option value="quadratic">Квадратное уравнение (ax2+bx+c=0)</option>
+            <option value="percent">Проценты (X% от Y)</option>
+            <option value="temp">Перевод температур</option>
+            <option value="factorial">Факториал числа (n!)</option>
+            <option value="sqrt">Квадратный корень</option>
+            <option value="cbrt">Кубический корень</option>
+            <option value="power">Возведение в степень (a^b)</option>
+            <option value="mod">Остаток от деления (a % b)</option>
+            <option value="div">Целочисленное деление (a // b)</option>
+        </select>
+
+        <div id="funcInputs"></div>
+        <button class="func-calc-btn" id="funcCalcBtn">Вычислить</button>
+        <div class="func-result" id="funcResult">Готов</div>
+    </div>
+
+    <div class="buttons" id="buttons-container"></div>
+    <footer>Калькулятор</footer>
+</div>
+
+<script>
+    const expressionEl = document.getElementById('expression');
+    const resultEl = document.getElementById('result');
+
+    let currentInput = '0';
+    let previousInput = null;
+    let currentOperator = null;
+    let waitingForOperand = false;
+    let lastActionWasEqual = false;
+
+    const CBRT_SYMBOL = '\u221B';
+
+    function formatNumber(value) {
+        if (value === undefined || value === null || value === '') return '0';
+        if (typeof value === 'string' && value === 'Ошибка') return 'Ошибка';
+        
+        let num;
+        if (typeof value === 'string') {
+            num = parseFloat(value);
+        } else {
+            num = value;
+        }
+        
+        if (isNaN(num)) return '0';
+        
+        if (Math.abs(num) > 1e14 || (Math.abs(num) < 1e-10 && num !== 0)) {
+            let precise = num.toPrecision(10);
+            precise = precise.replace(/\.?0+$/, '');
+            if (precise.endsWith('.')) precise = precise.slice(0, -1);
+            if (precise === '-0') return '0';
+            return precise;
+        }
+        
+        if (Number.isInteger(num)) {
+            return num.toString();
+        }
+        
+        let rounded = Math.round(num * 1e9) / 1e9;
+        let str = rounded.toString();
+        if (str.includes('.')) {
+            str = str.replace(/\.?0+$/, '');
+            if (str.endsWith('.')) str = str.slice(0, -1);
+        }
+        if (str === '-0') return '0';
+        if (str.length > 16) {
+            let precise = num.toPrecision(8);
+            precise = precise.replace(/\.?0+$/, '');
+            if (precise === '-0') return '0';
+            return precise;
+        }
+        return str;
+    }
+
+    function updateDisplay() {
+        let displayValue = currentInput;
+        if (displayValue === '' || displayValue === undefined || displayValue === 'Ошибка') {
+            resultEl.innerText = displayValue === 'Ошибка' ? 'Ошибка' : '0';
+        } else {
+            let num = parseFloat(displayValue);
+            if (!isNaN(num)) {
+                resultEl.innerText = formatNumber(num);
+            } else {
+                resultEl.innerText = '0';
+            }
+        }
+
+        if (currentOperator && previousInput !== null && !waitingForOperand) {
+            let prevFormatted = formatNumber(parseFloat(previousInput));
+            let opSymbol = '';
+            if (currentOperator === '+') opSymbol = '+';
+            else if (currentOperator === '-') opSymbol = '-';
+            else if (currentOperator === '*') opSymbol = '*';
+            else if (currentOperator === '/') opSymbol = '/';
+            let currentFormatted = formatNumber(parseFloat(currentInput));
+            expressionEl.innerText = prevFormatted + ' ' + opSymbol + ' ' + currentFormatted;
+        }
+        else if (previousInput !== null && waitingForOperand && currentOperator) {
+            let prevFormatted = formatNumber(parseFloat(previousInput));
+            let opSymbol = '';
+            if (currentOperator === '+') opSymbol = '+';
+            else if (currentOperator === '-') opSymbol = '-';
+            else if (currentOperator === '*') opSymbol = '*';
+            else if (currentOperator === '/') opSymbol = '/';
+            expressionEl.innerText = prevFormatted + ' ' + opSymbol;
+        }
+        else if (lastActionWasEqual && currentOperator === null && previousInput === null) {
+            let val = parseFloat(currentInput);
+            if (!isNaN(val)) expressionEl.innerText = formatNumber(val);
+            else expressionEl.innerText = currentInput;
+        }
+        else {
+            let val = parseFloat(currentInput);
+            if (!isNaN(val)) expressionEl.innerText = formatNumber(val);
+            else expressionEl.innerText = currentInput;
+        }
+        
+        if (expressionEl.innerText === '') expressionEl.innerText = '0';
+    }
+
+    function calculateResult() {
+        if (currentOperator === null || previousInput === null || waitingForOperand) return false;
+        let a = parseFloat(previousInput);
+        let b = parseFloat(currentInput);
+        if (isNaN(a) || isNaN(b)) return false;
+        let computedValue;
+        switch (currentOperator) {
+            case '+': computedValue = a + b; break;
+            case '-': computedValue = a - b; break;
+            case '*': computedValue = a * b; break;
+            case '/':
+                if (b === 0) {
+                    currentInput = 'Ошибка';
+                    previousInput = null;
+                    currentOperator = null;
+                    waitingForOperand = false;
+                    lastActionWasEqual = false;
+                    updateDisplay();
+                    return false;
+                }
+                computedValue = a / b; break;
+            default: return false;
+        }
+        currentInput = computedValue.toString();
+        previousInput = null;
+        currentOperator = null;
+        waitingForOperand = false;
+        lastActionWasEqual = true;
+        updateDisplay();
+        return true;
+    }
+
+    function inputDigit(digit) {
+        if (currentInput === 'Ошибка') clearAll();
+        if (lastActionWasEqual) { clearAll(); lastActionWasEqual = false; }
+        if (waitingForOperand) {
+            currentInput = digit;
+            waitingForOperand = false;
+            lastActionWasEqual = false;
+        } else {
+            if (currentInput === '0' && digit !== '.') currentInput = digit;
+            else if (digit === '.') { if (!currentInput.includes('.')) currentInput += '.'; }
+            else {
+                if (currentInput.replace(/\./g, '').length < 15) currentInput += digit;
+            }
+        }
+        updateDisplay();
+    }
+
+    function inputDecimal() {
+        if (currentInput === 'Ошибка') clearAll();
+        if (lastActionWasEqual) { clearAll(); lastActionWasEqual = false; }
+        if (waitingForOperand) { currentInput = '0.'; waitingForOperand = false; }
+        else { if (!currentInput.includes('.')) currentInput += '.'; }
+        updateDisplay();
+    }
+
+    function handleOperator(op) {
+        if (currentInput === 'Ошибка') clearAll();
+        if (lastActionWasEqual) {
+            previousInput = currentInput;
+            waitingForOperand = true;
+            currentOperator = op;
+            lastActionWasEqual = false;
+            updateDisplay();
+            return;
+        }
+        if (currentOperator === null || previousInput === null) {
+            if (currentInput !== '' && currentInput !== 'Ошибка') {
+                previousInput = currentInput;
+                currentOperator = op;
+                waitingForOperand = true;
+                updateDisplay();
+            }
+            return;
+        }
+        if (!waitingForOperand && previousInput !== null && currentOperator !== null) {
+            let a = parseFloat(previousInput);
+            let b = parseFloat(currentInput);
+            if (!isNaN(a) && !isNaN(b)) {
+                let tempResult;
+                switch (currentOperator) {
+                    case '+': tempResult = a + b; break;
+                    case '-': tempResult = a - b; break;
+                    case '*': tempResult = a * b; break;
+                    case '/':
+                        if (b === 0) {
+                            currentInput = 'Ошибка';
+                            previousInput = null;
+                            currentOperator = null;
+                            waitingForOperand = false;
+                            updateDisplay();
+                            return;
+                        }
+                        tempResult = a / b; break;
+                    default: tempResult = b;
+                }
+                previousInput = tempResult.toString();
+                currentInput = previousInput;
+                currentOperator = op;
+                waitingForOperand = true;
+                updateDisplay();
+            } else {
+                previousInput = currentInput;
+                currentOperator = op;
+                waitingForOperand = true;
+                updateDisplay();
+            }
+        } else {
+            currentOperator = op;
+            updateDisplay();
+        }
+    }
+
+    function percentage() {
+        if (currentInput === 'Ошибка') return;
+        if (lastActionWasEqual) clearAll();
+        let val = parseFloat(currentInput);
+        if (isNaN(val)) return;
+        currentInput = (val / 100).toString();
+        if (previousInput !== null && currentOperator !== null && waitingForOperand === false) {
+            let base = parseFloat(previousInput);
+            if (!isNaN(base)) {
+                currentInput = (base * (val / 100)).toString();
+            }
+        }
+        waitingForOperand = false;
+        updateDisplay();
+    }
+
+    function clearAll() {
+        currentInput = '0';
+        previousInput = null;
+        currentOperator = null;
+        waitingForOperand = false;
+        lastActionWasEqual = false;
+        updateDisplay();
+    }
+
+    function clearEntry() {
+        if (currentInput === 'Ошибка') {
+            clearAll();
+            return;
+        }
+        if (currentInput !== '0' && currentInput.length > 1) {
+            currentInput = currentInput.slice(0, -1);
+            if (currentInput === '' || currentInput === '-') currentInput = '0';
+        } else {
+            currentInput = '0';
+        }
+        waitingForOperand = false;
+        lastActionWasEqual = false;
+        updateDisplay();
+    }
+
+    function equals() {
+        if (currentInput === 'Ошибка') return;
+        if (currentOperator !== null && previousInput !== null && !waitingForOperand) {
+            calculateResult();
+        } else if (currentOperator !== null && previousInput !== null && waitingForOperand) {
+            currentInput = previousInput;
+            previousInput = null;
+            currentOperator = null;
+            waitingForOperand = false;
+            lastActionWasEqual = true;
+            updateDisplay();
+        } else {
+            lastActionWasEqual = true;
+            updateDisplay();
+        }
+    }
+
+    function solveQuadratic(a, b, c) {
+        if (a === 0) return "Коэффициент a не может быть равен 0";
+        let d = b * b - 4 * a * c;
+        if (d < 0) return "Нет действительных корней";
+        if (Math.abs(d) < 1e-10) return "Один корень: x = " + formatNumber(-b / (2 * a));
+        let sqrtD = Math.sqrt(d);
+        return "Два корня: x1 = " + formatNumber((-b + sqrtD) / (2 * a)) + ", x2 = " + formatNumber((-b - sqrtD) / (2 * a));
+    }
+
+    function factorial(n) {
+        if (n < 0) return null;
+        if (n <= 1) return 1;
+        let r = 1;
+        for (let i = 2; i <= n; i++) r *= i;
+        return r;
+    }
+
+    function updateFuncInputs() {
+        const t = document.getElementById('funcSelect').value;
+        const c = document.getElementById('funcInputs');
+        c.innerHTML = '';
+        if (t === 'bmi') c.innerHTML = '<div class="func-input-group"><label>Вес (кг):</label><input type="number" id="bmi_weight"></div><div class="func-input-group"><label>Рост (м):</label><input type="number" id="bmi_height" step="0.01"></div>';
+        else if (t === 'quadratic') c.innerHTML = '<div class="func-input-group"><label>a (не 0):</label><input type="number" id="quad_a"></div><div class="func-input-group"><label>b:</label><input type="number" id="quad_b"></div><div class="func-input-group"><label>c:</label><input type="number" id="quad_c"></div>';
+        else if (t === 'percent') c.innerHTML = '<div class="func-input-group"><label>X:</label><input type="number" id="percent_x"></div><div class="func-input-group"><label>Y:</label><input type="number" id="percent_y"></div>';
+        else if (t === 'temp') c.innerHTML = '<div class="func-input-group"><label>Направление:</label><select id="temp_dir"><option value="c_to_f">C -> F</option><option value="f_to_c">F -> C</option><option value="c_to_k">C -> K</option><option value="k_to_c">K -> C</option></select></div><div class="func-input-group"><label>Температура:</label><input type="number" id="temp_val"></div>';
+        else if (t === 'factorial') c.innerHTML = '<div class="func-input-group"><label>Число n:</label><input type="number" id="fact_n" step="1"></div>';
+        else if (t === 'sqrt') c.innerHTML = '<div class="func-input-group"><label>Число:</label><input type="number" id="sqrt_val"></div>';
+        else if (t === 'cbrt') c.innerHTML = '<div class="func-input-group"><label>Число:</label><input type="number" id="cbrt_val"></div>';
+        else if (t === 'power') c.innerHTML = '<div class="func-input-group"><label>Основание a:</label><input type="number" id="pow_a"></div><div class="func-input-group"><label>Степень b:</label><input type="number" id="pow_b"></div>';
+        else if (t === 'mod') c.innerHTML = '<div class="func-input-group"><label>Делимое a:</label><input type="number" id="mod_a"></div><div class="func-input-group"><label>Делитель b:</label><input type="number" id="mod_b"></div>';
+        else if (t === 'div') c.innerHTML = '<div class="func-input-group"><label>Делимое a:</label><input type="number" id="div_a"></div><div class="func-input-group"><label>Делитель b:</label><input type="number" id="div_b"></div>';
+    }
+
+    function executeAdvanced() {
+        const t = document.getElementById('funcSelect').value;
+        let res = '';
+        try {
+            if (t === 'bmi') {
+                let w = parseFloat(document.getElementById('bmi_weight')?.value), h = parseFloat(document.getElementById('bmi_height')?.value);
+                if (isNaN(w) || isNaN(h)) throw new Error('Введите вес и рост');
+                if (h <= 0) throw new Error('Рост > 0');
+                let bmi = w / (h * h);
+                let desc = bmi < 18.5 ? 'Дефицит массы' : bmi < 25 ? 'Норма' : bmi < 30 ? 'Избыточная масса' : 'Ожирение';
+                res = 'ИМТ = ' + formatNumber(bmi) + ' (' + desc + ')';
+            } else if (t === 'quadratic') {
+                let a = parseFloat(document.getElementById('quad_a')?.value), b = parseFloat(document.getElementById('quad_b')?.value), c = parseFloat(document.getElementById('quad_c')?.value);
+                if (isNaN(a) || isNaN(b) || isNaN(c)) throw new Error('Введите a,b,c');
+                res = solveQuadratic(a, b, c);
+            } else if (t === 'percent') {
+                let x = parseFloat(document.getElementById('percent_x')?.value), y = parseFloat(document.getElementById('percent_y')?.value);
+                if (isNaN(x) || isNaN(y)) throw new Error('Введите X и Y');
+                res = x + '% от ' + y + ' = ' + formatNumber((x / 100) * y);
+            } else if (t === 'temp') {
+                let dir = document.getElementById('temp_dir')?.value, val = parseFloat(document.getElementById('temp_val')?.value);
+                if (isNaN(val)) throw new Error('Введите температуру');
+                if (dir === 'c_to_f') res = val + '°C = ' + formatNumber(val * 9/5 + 32) + '°F';
+                else if (dir === 'f_to_c') res = val + '°F = ' + formatNumber((val - 32) * 5/9) + '°C';
+                else if (dir === 'c_to_k') res = val + '°C = ' + formatNumber(val + 273.15) + 'K';
+                else if (dir === 'k_to_c') { if (val < 0) throw new Error('Кельвины не могут быть < 0'); res = val + 'K = ' + formatNumber(val - 273.15) + '°C'; }
+            } else if (t === 'factorial') {
+                let n = parseInt(document.getElementById('fact_n')?.value);
+                if (isNaN(n)) throw new Error('Введите число');
+                let f = factorial(n);
+                if (f === null) throw new Error('Факториал отрицательного числа не определён');
+                res = n + '! = ' + f;
+            } else if (t === 'sqrt') {
+                let val = parseFloat(document.getElementById('sqrt_val')?.value);
+                if (isNaN(val)) throw new Error('Введите число');
+                if (val < 0) throw new Error('Корень из отрицательного');
+                res = 'v' + val + ' = ' + formatNumber(Math.sqrt(val));
+            } else if (t === 'cbrt') {
+                let val = parseFloat(document.getElementById('cbrt_val')?.value);
+                if (isNaN(val)) throw new Error('Введите число');
+                res = CBRT_SYMBOL + val + ' = ' + formatNumber(Math.cbrt(val));
+            } else if (t === 'power') {
+                let a = parseFloat(document.getElementById('pow_a')?.value), b = parseFloat(document.getElementById('pow_b')?.value);
+                if (isNaN(a) || isNaN(b)) throw new Error('Введите a и b');
+                let p = Math.pow(a, b);
+                if (!isFinite(p)) throw new Error('Результат слишком велик');
+                res = a + '^' + b + ' = ' + formatNumber(p);
+            } else if (t === 'mod') {
+                let a = parseFloat(document.getElementById('mod_a')?.value), b = parseFloat(document.getElementById('mod_b')?.value);
+                if (isNaN(a) || isNaN(b)) throw new Error('Введите два числа');
+                if (b === 0) throw new Error('Деление на ноль');
+                res = a + ' % ' + b + ' = ' + formatNumber(a % b);
+            } else if (t === 'div') {
+                let a = parseFloat(document.getElementById('div_a')?.value), b = parseFloat(document.getElementById('div_b')?.value);
+                if (isNaN(a) || isNaN(b)) throw new Error('Введите два числа');
+                if (b === 0) throw new Error('Деление на ноль');
+                res = a + ' // ' + b + ' = ' + Math.floor(a / b);
+            }
+            document.getElementById('funcResult').innerText = res;
+        } catch(e) {
+            document.getElementById('funcResult').innerText = 'Ошибка: ' + e.message;
+        }
+    }
+
+    function buildButtons() {
+        const container = document.getElementById('buttons-container');
+        container.innerHTML = '';
+        
+        const layout = [
+            [{ text: 'AC', type: 'clear-all', class: 'btn-clear' }, { text: '%', type: 'percent', class: 'btn-function' }, null, { text: '/', type: 'operator', value: '/', class: 'btn-operator' }],
+            [{ text: '7', type: 'digit', value: '7', class: '' }, { text: '8', type: 'digit', value: '8', class: '' }, { text: '9', type: 'digit', value: '9', class: '' }, { text: '*', type: 'operator', value: '*', class: 'btn-operator' }],
+            [{ text: '4', type: 'digit', value: '4', class: '' }, { text: '5', type: 'digit', value: '5', class: '' }, { text: '6', type: 'digit', value: '6', class: '' }, { text: '-', type: 'operator', value: '-', class: 'btn-operator' }],
+            [{ text: '1', type: 'digit', value: '1', class: '' }, { text: '2', type: 'digit', value: '2', class: '' }, { text: '3', type: 'digit', value: '3', class: '' }, { text: '+', type: 'operator', value: '+', class: 'btn-operator' }],
+            [{ text: '0', type: 'digit', value: '0', class: '' }, { text: '.', type: 'decimal', class: '' }, null, { text: '=', type: 'equals', class: 'btn-equals' }]
+        ];
+        
+        for (let row = 0; row < layout.length; row++) {
+            for (let col = 0; col < 4; col++) {
+                const btnData = layout[row][col];
+                if (btnData) {
+                    const el = document.createElement('button');
+                    el.innerText = btnData.text;
+                    let baseClass = 'btn';
+                    if (btnData.class) baseClass += ' ' + btnData.class;
+                    el.className = baseClass;
+                    
+                    if (btnData.type === 'digit') el.addEventListener('click', () => inputDigit(btnData.value));
+                    else if (btnData.type === 'decimal') el.addEventListener('click', () => inputDecimal());
+                    else if (btnData.type === 'operator') el.addEventListener('click', () => handleOperator(btnData.value));
+                    else if (btnData.type === 'equals') el.addEventListener('click', () => equals());
+                    else if (btnData.type === 'percent') el.addEventListener('click', () => percentage());
+                    else if (btnData.type === 'clear-all') el.addEventListener('click', () => {
+                        if (currentInput !== '0' && currentInput !== 'Ошибка' && !waitingForOperand && !lastActionWasEqual) clearEntry();
+                        else clearAll();
+                    });
+                    container.appendChild(el);
+                } else {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.style.visibility = 'hidden';
+                    emptyDiv.style.aspectRatio = '1 / 1';
+                    container.appendChild(emptyDiv);
+                }
+            }
+        }
+    }
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (btn.dataset.mode === 'standard') document.getElementById('funcPanel').classList.remove('active');
+            else { document.getElementById('funcPanel').classList.add('active'); updateFuncInputs(); }
+        });
+    });
+    document.getElementById('funcSelect').addEventListener('change', updateFuncInputs);
+    document.getElementById('funcCalcBtn').addEventListener('click', executeAdvanced);
+    buildButtons();
+    updateDisplay();
+    updateFuncInputs();
+    document.getElementById('funcPanel').classList.remove('active');
+</script>
+</body>
+</html>
