@@ -1,29 +1,64 @@
-┌─────────────────────────────────────────────────────────────┐
-│                             CalculatorApp                   │
-|────────────────────────────────────────────────────────────-|
-│ - root: tk.Tk                                               │
-│ - main_frame: ttk.Frame                                     │
-│ - operation_var: tk.StringVar                               │
-│ - operation_combo: ttk.Combobox                             │
-│ - input_frame: ttk.LabelFrame                               │
-│ - result_frame: ttk.LabelFrame                              │
-│ - result_label: ttk.Label                                   |
-│ - calc_button: ttk.Button                                   |
-│ - exit_button: ttk.Button                                   │
-│ - input_entries: dict                                       │
-|────────────────────────────────────────────────────────────-|
-│ + __init__(root: tk.Tk)                                     │
-│ + exit_app()                                                │
-│ + on_operation_change()                                     │
-│ + create_input_field()                                      |
-│ + get_input_values() -> list                                |
-│ + calculate()                                               │
-└──────────────────────────────────────────────────────────---┘
-                              |                            
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Внешние функции                           │
-|────────────────────────────────────────────────────────────-|
-│ + calculate_bmi(weight, height) -> float                    │
-│ + solve_quadratic(a, b, c) -> str                           │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              CalculatorApp                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ - root: tk.Tk                                                               │
+│ - current_input: str                                                        │
+│ - current_operation: str                                                    │
+│ - first_number: float                                                       │
+│ - waiting_for_second: bool                                                  │
+│ - mode: str                                                                 │
+│ - mode_var: tk.StringVar                                                    │
+│ - display_var: tk.StringVar                                                 │
+│ - display_label: tk.Label                                                   │
+│ - display_frame: tk.Frame                                                   │
+│ - buttons_frame: tk.Frame                                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ + __init__(root: tk.Tk)                                                     │
+│ + setup_ui()                                                                │
+│ + create_standard_buttons()                                                 │
+│ + lighten_color(color: str) -> str                                          │
+│ + on_mode_change(event: Optional)                                           │
+│ + on_button_click(button_text: str)                                         │
+│ + add_to_display(value: str)                                                │
+│ + update_display()                                                          │
+│ + clear_all()                                                               │
+│ + backspace()                                                               │
+│ + handle_operator(operator: str)                                            │
+│ + calculate_result()                                                        │
+│ + calculate_sqrt()                                                          │
+│ + calculate_cbrt()                                                          │
+│ + calculate_factorial()                                                     │
+│ + calculate_bmi()                                                           │
+│ + calculate_percent()                                                       │
+│ + solve_quadratic()                                                         │
+│ + convert_temperature()                                                     │
+│ + bind_keyboard()                                                           │
+│ + on_key_press(event: tk.Event)                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                                    │
+                                    │ использует
+                                    ▼
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              tkinter (библиотека)                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ + Tk                                                                        │
+│ + Frame                                                                     │
+│ + Label                                                                     │
+│ + Button                                                                    │
+│ + Entry                                                                     │
+│ + StringVar                                                                 │
+│ + Toplevel                                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                                    │
+                                    │ использует
+                                    ▼
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                math (библиотека)                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ + sqrt(x)                                                                   │
+│ + pow(x, y)                                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
