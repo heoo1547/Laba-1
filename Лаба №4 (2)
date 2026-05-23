@@ -1,1 +1,49 @@
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            CalculatorApp                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ - root : tk.Tk                                                              │
+│ - is_fullscreen : bool                                                      │
+│ - normal_size : str                                                         │
+│ - current_input : str                                                       │
+│ - current_operation : str                                                   │
+│ - first_number : float                                                      │
+│ - waiting_for_second : bool                                                 │
+│ - mode : str                                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ + __init__(root)                                                            │
+│ + toggle_fullscreen(event)                                                  │
+│ + exit_fullscreen(event)                                                    │
+│ + setup_ui()                                                                │
+│ + on_window_resize(event)                                                   │
+│ + create_standard_buttons()                                                 │
+│ + lighten_color(color) : str                                                │
+│ + on_mode_change(event)                                                     │
+│ + on_button_click(button_text)                                              │
+│ + add_to_display(value)                                                     │
+│ + update_display()                                                          │
+│ + clear_all()                                                               │
+│ + backspace()                                                               │
+│ + handle_operator(operator)                                                 │
+│ + calculate_result()                                                        │
+│ + calculate_sqrt()                                                          │
+│ + calculate_cbrt()                                                          │
+│ + calculate_factorial()                                                     │
+│ + calculate_bmi()                                                           │
+│ + calculate_percent()                                                       │
+│ + solve_quadratic()                                                         │
+│ + convert_temperature()                                                     │
+│ + bind_keyboard()                                                           │
+│ + on_key_press(event)                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                          │
+                                          │ использует / создаёт
+                                          ▼
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│     tk.Tk       │  │    tk.Frame     │  │    tk.Label     │  │   tk.Button     │
+│   (главное окно)│  │   (контейнеры)  │  │   (дисплей)     │  │   (кнопки)      │
+└─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
 
+┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
+│ ttk.Combobox    │  │  tk.Toplevel    │  │   messagebox    │  │      math       │
+│ (выбор режима)  │  │  (диалоги)      │  │ (сообщения)     │  │ (мат. функции)  │
+└─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
